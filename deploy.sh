@@ -1,13 +1,15 @@
 #!/bin/bash
 set -e
 
-FTP_HOST="72.60.93.163"
-FTP_USER="u432921424"
-FTP_PASS="${FTP_PASS:-}"
-FTP_BASE="public_html/ggul"
+if [ ! -f ".ftp.env" ]; then
+  echo "ERROR: .ftp.env dosyası bulunamadı."
+  exit 1
+fi
+
+source .ftp.env
 
 if [ -z "$FTP_PASS" ]; then
-  echo "Usage: FTP_PASS=yourpassword bash deploy.sh"
+  echo "ERROR: .ftp.env içinde FTP_PASS boş."
   exit 1
 fi
 
@@ -38,13 +40,13 @@ upload_dir() {
 }
 
 echo "=== Uploading food/ ==="
-upload_dir "$ROOT_DIR/food/dist" "$FTP_BASE/food"
+upload_dir "$ROOT_DIR/food/dist" "food"
 
 echo "=== Uploading portal/ ==="
-upload_dir "$ROOT_DIR/portal/dist" "$FTP_BASE/portal"
+upload_dir "$ROOT_DIR/portal/dist" "portal"
 
 echo "=== Uploading news/ ==="
-upload_dir "$ROOT_DIR/news/dist" "$FTP_BASE/news"
+upload_dir "$ROOT_DIR/news/dist" "news"
 
 echo ""
 echo "=== Done! ==="
