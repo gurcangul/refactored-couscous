@@ -1,38 +1,51 @@
 #!/bin/bash
 set -e
 
-REPO_URL="https://github.com/gurcangul/refactored-couscous.git"
-DEPLOY_DIR="_deploy_tmp"
+FTP_HOST="72.60.93.163"
+FTP_USER="u432921424"
+FTP_PASS="${FTP_PASS:-}"
+FTP_BASE="public_html/ggul"
 
-echo "=== Building food/ (React 17) ==="
+if [ -z "$FTP_PASS" ]; then
+  echo "Usage: FTP_PASS=yourpassword bash deploy.sh"
+  exit 1
+fi
+
+echo "=== Building food/ ==="
 cd food && npm run build && cd ..
 
-echo "=== Building portal/ (React 18) ==="
+echo "=== Building portal/ ==="
 cd portal && npm run build && cd ..
 
-echo "=== Building news/ (React 18) ==="
+echo "=== Building news/ ==="
 cd news && npm run build && cd ..
 
-echo "=== Preparing build branch ==="
-rm -rf $DEPLOY_DIR
-mkdir -p $DEPLOY_DIR/food
-mkdir -p $DEPLOY_DIR/portal
-mkdir -p $DEPLOY_DIR/news
+upload_dir() {
+  local LOCAL_DIR=$1
+  local REMOTE_DIR=$2
 
-cp -r food/dist/. $DEPLOY_DIR/food/
-cp -r portal/dist/. $DEPLOY_DIR/portal/
-cp -r news/dist/. $DEPLOY_DIR/news/
+  find "$LOCAL_DIR" -type f | while IFS= read -r FILE; do
+    RELATIVE="${FILE#$LOCAL_DIR/}"
+    curl --ftp-create-dirs \
+      --user "$FTP_USER:$FTP_PASS" \
+      -T "$FILE" \
+      "ftp://$FTP_HOST/$REMOTE_DIR/$RELATIVE" \
+      && echo "  uploaded: $RELATIVE" \
+      || echo "  FAILED: $RELATIVE"
+  done
+}
 
-echo "=== Pushing to build branch ==="
-cd $DEPLOY_DIR
-git init
-git checkout -b build
-git add -A
-git commit -m "deploy: $(date '+%Y-%m-%d %H:%M:%S')"
-git remote add origin $REPO_URL
-git push -f origin build
+echo "=== Uploading food/ ==="
+upload_dir "food/dist" "$FTP_BASE/food"
 
-cd ..
-rm -rf $DEPLOY_DIR
+echo "=== Uploading portal/ ==="
+upload_dir "portal/dist" "$FTP_BASE/portal"
 
-echo "=== Done. build branch updated with food/, portal/, news/ ==="
+echo "=== Uploading news/ ==="
+upload_dir "news/dist" "$FTP_BASE/news"
+
+echo ""
+echo "=== Done! ==="
+echo "  gurcangul.com/ggul/food/"
+echo "  gurcangul.com/ggul/portal/"
+echo "  gurcangul.com/ggul/news/"
