@@ -11,14 +11,16 @@ if [ -z "$FTP_PASS" ]; then
   exit 1
 fi
 
+ROOT_DIR="$(pwd)"
+
 echo "=== Building food/ ==="
-cd food && npm run build && cd ..
+(cd "$ROOT_DIR/food" && npm run build)
 
 echo "=== Building portal/ ==="
-cd portal && npm run build && cd ..
+(cd "$ROOT_DIR/portal" && npm run build)
 
 echo "=== Building news/ ==="
-cd news && npm run build && cd ..
+(cd "$ROOT_DIR/news" && npm run build)
 
 upload_dir() {
   local LOCAL_DIR=$1
@@ -36,13 +38,13 @@ upload_dir() {
 }
 
 echo "=== Uploading food/ ==="
-upload_dir "food/dist" "$FTP_BASE/food"
+upload_dir "$ROOT_DIR/food/dist" "$FTP_BASE/food"
 
 echo "=== Uploading portal/ ==="
-upload_dir "portal/dist" "$FTP_BASE/portal"
+upload_dir "$ROOT_DIR/portal/dist" "$FTP_BASE/portal"
 
 echo "=== Uploading news/ ==="
-upload_dir "news/dist" "$FTP_BASE/news"
+upload_dir "$ROOT_DIR/news/dist" "$FTP_BASE/news"
 
 echo ""
 echo "=== Done! ==="
